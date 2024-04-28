@@ -3,7 +3,6 @@
 
 #Include g:\AHK\git-ahk-lib\Extend.ahk
 
-
 /**
  * @example
  * ; register actions by constructor
@@ -22,15 +21,11 @@
  */
 class HotStringEx {
 
-  actions := Map()
-  matchList := ''
-  TimeOutFunc := Noop
-  MaxFunc := Noop
+  actions := Map(), matchList := '', TimeOutFunc := Noop, MaxFunc := Noop
 
   ; ['jq', (*)=>'jquery'], ...
   __New(hk, hkLen, listAndActions*) {
-    this.hk := hk
-    this.hkLen := hkLen
+    this.hk := hk, this.hkLen := hkLen
     if (listAndActions.Length) {
       this._Update(listAndActions)
       Hotkey this.hk, (*) => this._Start(this.matchList), 'On'
@@ -47,8 +42,7 @@ class HotStringEx {
 
   _Start(matchList) {
     ih := InputHook('V T5 L8 C', '{space};', matchList)
-    ih.Start()
-    ih.Wait()
+    ih.Start(), ih.Wait()
     switch ih.EndReason {
       case "Max": this.MaxFunc()
       case "Timeout": this.TimeOutFunc()
@@ -62,8 +56,7 @@ class HotStringEx {
   _Reload() => Hotkey(this.hk, (*) => this._Start(this.matchList), 'On')
 
   Register(listAndActions*) {
-    this._Update(listAndActions)
-    this._Reload()
+    this._Update(listAndActions), this._Reload()
   }
 
   Cancel(list*) {

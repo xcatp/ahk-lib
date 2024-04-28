@@ -7,8 +7,7 @@
 
 class Image extends Gui {
 
-  data := {}
-  _flipH := false, _flipV := false, state := 0
+  data := {}, _flipH := false, _flipV := false, state := 0
 
   __New(filePath, angle := 0, OnContex := Noop, OnLbtnDown := Noop) {
     super.__New('-Caption +E0x80000 +AlwaysOnTop +ToolWindow +OwnDialogs')

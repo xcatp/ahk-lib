@@ -30,9 +30,8 @@ arrProto.DefineProp("Max", { call: _Max })
 
 ; 静态方法从字符串或数组创建一个新的**深拷贝**的数组实例。
 _From(this, arrayLike, mapFn?) {
-  if not (IsArray(arrayLike) or IsString(arrayLike)) {
+  if not (IsArray(arrayLike) or IsString(arrayLike))
     throw Error('invalid param')
-  }
   if IsSet(mapFn) {
     switch mapFn.MaxParams {
       case 1: _fn := (v, *) => mapFn(v)
@@ -42,12 +41,9 @@ _From(this, arrayLike, mapFn?) {
   } else _fn := (v, *) => v
   arr := []
   if arrayLike is Array {
-    for v in arrayLike {
+    for v in arrayLike
       arr.Push(_fn(v, A_Index))
-    }
-  } else {
-    arr := arrayLike.ToCharArray()
-  }
+  } else arr := arrayLike.ToCharArray()
   return arr
 }
 
@@ -55,9 +51,8 @@ _From(this, arrayLike, mapFn?) {
 ; 此方法不会更改现有数组，而是返回一个新数组。
 _Concat_Array(this, value*) {
   r := this.DeepClone()
-  for v in value {
-    IsArray(value) ? r.Push(value*) : r.Push(v)
-  }
+  for v in value
+    IsArray(v) ? r.Push(v*) : r.Push(v)
   return r
 }
 
@@ -79,9 +74,8 @@ _Every(this, cb) {
     default: throw Error('invalid callback function')
   }
   for v in copy {
-    if !_fn(v, A_Index, copy) {
+    if !_fn(v, A_Index, copy)
       return false
-    }
   }
   return true
 }
@@ -95,33 +89,22 @@ _Fill(this, value, start?, end?) {
       end := end > l ? l : end
       start := start > end ? end : start
       d := end - start
-    } else {
-      d := start > l ? l : l - start
-    }
-    loop d + 1 {
+    } else d := start > l ? l : l - start
+    loop d + 1
       this[start + A_Index - 1] := value
-    }
-  } else {
-    loop l {
-      this[A_Index] := value
-    }
-  }
+  } else loop l
+    this[A_Index] := value
 }
 
 ; 扁平化数组，传入-1表示无限
 _Flat(this, depth) {
   stack := [this.map(item => [item, depth])*], res := []
-
   while (stack.Length > 0) {
     sub := stack.Pop(), _item := sub[1], _depth := sub[2]
-
-    if (IsArray(_item) && (_depth > 0 || depth = -1)) {
+    if (IsArray(_item) && (_depth > 0 || depth = -1))
       stack.Push(_item.map(el => [el, _depth - 1])*)
-    } else {
-      res.Push(_item)
-    }
+    else res.Push(_item)
   }
-
   return res.reverse()
 }
 
@@ -144,9 +127,8 @@ _Filter(this, cb) {
 ; 返回数组中满足提供的测试函数的第一个元素的值。否则返回 空。
 _Find(this, cb) {
   for v in this {
-    if cb(v) {
+    if cb(v)
       return v
-    }
   }
 }
 
@@ -154,9 +136,8 @@ _Find(this, cb) {
 ; 若没有找到对应元素则返回 -1。
 _FindIndex(this, cb) {
   for v in this {
-    if cb(v) {
+    if cb(v)
       return A_Index
-    }
   }
   return -1
 }
@@ -164,23 +145,22 @@ _FindIndex(this, cb) {
 ; 反向迭代数组，并返回满足提供的测试函数的第一个元素的值。
 _FindLast(this, cb) {
   loop l := this.Length {
-    if cb(v := this[l - A_Index + 1]) {
+    if cb(v := this[l - A_Index + 1])
       return v
-    }
   }
 }
 
 ; 反向迭代数组，并返回满足提供的测试函数的第一个元素的索引。
 _FindLastIndex(this, cb) {
   loop l := this.Length {
-    if cb(this[l - A_Index + 1]) {
+    if cb(this[l - A_Index + 1])
       return l - A_Index + 1
-    }
   }
   return -1
 }
 
 ; 对数组的每个元素执行一次给定的函数。
+; 仅执行，而不返回任何结果
 _ForEach(this, cb) {
   switch cb.MaxParams {
     case 1: _fn := (v, *) => cb(v)
@@ -188,17 +168,15 @@ _ForEach(this, cb) {
     case 3: _fn := (v, index, arr) => cb(v, index, arr)
     default: throw Error('invalid callback function')
   }
-  for v in this {
+  for v in this
     _fn(v, A_Index, this)
-  }
 }
 
 ; 返回数组的深拷贝。
 _DeepClone(this) {
   arr := []
-  for v in this {
+  for v in this
     arr.Push(v)
-  }
   return arr
 }
 
@@ -207,9 +185,8 @@ _DeepClone(this) {
 _Join(this, separator := ',') {
   if this.Length {
     for v in this {
-      if IsSet(v) {
+      if IsSet(v)
         r .= v (A_Index != this.Length ? separator : '')
-      }
     }
     return r || ''
   }
@@ -247,38 +224,25 @@ _Map(this, cb) {
     default: throw Error('invalid callback function')
   }
   res := []
-  for v in this {
+  for v in this
     res.push(_fn(v, A_Index, this))
-  }
   return res
 }
 ; 对数组中的每个元素按序执行一个提供的 reducer 函数，每一次运行 reducer 会将先前元素的计算结果作为参数传入。
 ; 最后将其结果汇总为单个返回值。
 _Reduce(this, cb, initialValue?) {
-  l := this.Length
-  if !l and !IsSet(initialValue)
-    throw TypeError()
-  else if !l and IsSet(initialValue) {
-    return initialValue
-  } else if l = 1
-    return this[1]
+  if !this.Length and !IsSet(initialValue)
+    throw TypeError('Reduce of empty array with no initial value')
   switch cb.MaxParams {
-    case 1: _fn := (p1, *) => cb(p1)
-    case 2: _fn := (p1, p2, *) => cb(p1, p2)
-    case 3: _fn := (p1, p2, p3, *) => cb(p1, p2, p3)
-    case 4: _fn := (p1, p2, p3, p4) => cb(p1, p2, p3, p4)
+    case 1: _fn := (accumulator, *) => cb(accumulator)
+    case 2: _fn := (accumulator, curVal, *) => cb(accumulator, curVal)
+    case 3: _fn := (accumulator, curVal, index, *) => cb(accumulator, curVal, index)
+    case 4: _fn := (accumulator, curVal, index, arr) => cb(accumulator, curVal, index, arr)
     default: throw Error('invalid callback function')
   }
-  if IsSet(initialValue) {
-    accumulator := initialValue + this[1]
-    i := 1
-  } else {
-    accumulator := this[1]
-    i := 0
-  }
-  loop l - i {
-    accumulator := _fn(accumulator, this[A_Index + i], A_Index + i, this)
-  }
+  accumulator := initialValue ?? this[1], i := IsSet(initialValue) ? 1 : 2
+  loop this.Length - i + 1
+    accumulator := _fn(accumulator, this[i], i, this), i++
   return accumulator
 }
 
@@ -304,7 +268,7 @@ _Shift(this) => this.RemoveAt(1)
 
 _Max(this) {
   if !this.Length
-    return Null
+    return
   ans := this[1]
   for v in this
     ans := Max(v, ans)
@@ -312,7 +276,7 @@ _Max(this) {
 }
 _Min(this) {
   if !this.Length
-    return Null
+    return
   ans := this[1]
   for v in this
     ans := Min(v, ans)

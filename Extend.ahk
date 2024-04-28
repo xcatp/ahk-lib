@@ -23,9 +23,8 @@ TrimAll(&str) => str := str.toCharArray().filter(v => v != ' ' && v != '`n').joi
 IfThen(condition, action, params*) {
   if condition {
     try execRes := action(params*)
-    catch {
+    catch 
       MsgBox 'error occu when exec func:' action.Name
-    }
     return true & IsTrue(execRes)
   } else return false
 }
@@ -38,7 +37,6 @@ IfThen(condition, action, params*) {
 ; MsgBox 'str1' '|' 'str2'
 ; ```
 JoinStr(splitor := '', strs*) => strs.Join(splitor)
-
 
 ; Usage:
 ; ```
@@ -55,7 +53,6 @@ JoinStr(splitor := '', strs*) => strs.Join(splitor)
 ; MsgBox v
 ; ```
 Deconstruction(target, vars*) {
-  ; global
   if IsArray(target) {
     for i, v in target {
       if not IsVarRef(vars[i]) {

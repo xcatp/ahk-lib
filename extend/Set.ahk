@@ -11,16 +11,14 @@ class Set extends Map {
 
   Add(e*) {
     for v in e {
-      if this.Has(v) {
+      if this.Has(v)
         return false
-      }
       super.Set(v, 0)
     }
     return true
   }
 
   Count => super.Count
-
   Has(e) => super.Has(e)
   Clear() => super.Clear()
   Delete(e) => super.Delete(e)

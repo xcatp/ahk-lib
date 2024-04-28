@@ -59,7 +59,4 @@ class Explorer {
   GetListViewAll() => this._GetListViewContent(false, 'Col1')
   GetLocationURL() => (Explorer.IsWinExist(this.hwnd) && !this.isDesktop) ? this.window.LocationURL : ''
   GetURL() => SubStr(this.GetLocationURL(), 9)
-
-  Shutdown() {
-  }
 }

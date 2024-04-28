@@ -38,14 +38,7 @@ class WtRunner {
 
   class Builder {
 
-    globalParam := {
-      window: '',
-      size: '',
-      pos: '',
-      focus: false
-    }
-
-    tabs := []
+    globalParam := { window: '', size: '', pos: '', focus: false }, tabs := []
 
     Chain(exp) => this
     Window(idOrName) => this.Chain(this.globalParam.window := idOrName)

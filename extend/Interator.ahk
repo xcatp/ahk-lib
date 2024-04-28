@@ -16,21 +16,16 @@ GetIterator(source) {
     throw TypeError('Expect an object but get the primitive type')
   if source is Array or source is Map
     enum := source.__Enum()
-  else
-    enum := source.OwnProps()
+  else enum := source.OwnProps()
   iter := { next: Next, enum: enum }
   iter.next()
 
   Next(this) {
     this.enum.call(&index, &value)
-
     done := false
     if not (IsSet(index) and IsSet(value))
       index := '', value := '', done := true
-
-    this.key := index
-    this.value := value
-    this.done := done
+    this.key := index, this.value := value, this.done := done
   }
 
   return iter

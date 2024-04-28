@@ -18,9 +18,8 @@ CoordMode 'Mouse'
 class Animation {
 
   static FadeOut(target, hide := false, wait := 10) {
-    loop 25 {
+    loop 25
       Sleep(wait), WinSetTransparent(255 - A_Index * 10, target)
-    }
     hide ? target.Hide() : target.Destroy()
   }
 
@@ -30,11 +29,9 @@ class Animation {
       doAdapter(), target.getPos(&x, &y, &w, &h)
     else target.getPos(&x, &y, &w, &h), _setPos(&x, &y)
     target.Show('x' x ' y' y ' NA'), doAfterShow()
-    loop 25 {
+    loop 25 
       Sleep(wait), WinSetTransparent(A_Index * 10, target)
-    }
     WinSetTransparent(255, target)
-
 
     _setPos(&x, &y) {
       MouseGetPos(&mx, &my)

@@ -11,6 +11,7 @@ class Debug extends Gui {
     this.AddButton('Section', 'clear').OnEvent('Click', (*) => this.content.Value := '')
     this.AddButton('yp', 'reload').OnEvent('Click', (*) => Reload())
     this.AddButton('yp', 'close').OnEvent('Click', (*) => this.Destroy())
+    this.AddButton('yp', 'exit').OnEvent('Click', (*) => ExitApp())
     this.content := this.AddEdit('w600 h800 xs ReadOnly')
     OnMessage(0x0201, (*) => PostMessage(0xA1, 2))
   }

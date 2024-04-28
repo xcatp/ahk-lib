@@ -10,11 +10,7 @@
 ; gif := GifSimu(picDir, 'idle', '001', '.png')
 class GifSimu {
 
-  data := {
-    start: 1,
-    end: 1,
-    delay: 30
-  }
+  data := { start: 1, end: 1, delay: 30 }
 
   __New(picDir, name, initValue, suffix) {
     this.img := Image.Of(Path.Join(picDir, JoinStr('', name, initValue, suffix)))

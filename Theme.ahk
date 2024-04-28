@@ -40,9 +40,8 @@ class Theme {
   }
 
   Apply(target) {
-    if not target is Gui {
+    if not target is Gui
       throw Error('target is no a gui')
-    }
     target.BackColor := this.t.window_Bgc
     ctrls := WinGetControlsHwnd(target)
     for ctrl in ctrls {
@@ -59,7 +58,7 @@ class Theme {
         default: 
       }
     }
-    return target
+    return this.t
   }
 
   static Dark(target) => Theme.Builder().UseTheme('Dark').Build().Apply(target)
