@@ -3,6 +3,7 @@
 #Include _Base.ahk
 
 DefProp(0.base, "BitCount", { call: _BitCount })
+DefProp(0.base, "Between", { call: _Between })
 
 _BitCount(this) {
   n := this
@@ -13,3 +14,5 @@ _BitCount(this) {
   n := (n >> 16 & 0xffff) + (n & 0xffff)
   return n
 }
+
+_Between(this, l, r) => this >= l && this <= r

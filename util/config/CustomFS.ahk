@@ -6,7 +6,7 @@
 class CustomFS {
 
   data := Map(), cfgs := Map(), vital := Map()
-    , escChar := '``', refChar := '$', commentChar := '#', importChar := '@', vitalChar := '*', q := "'"
+    , escChar := '``', refChar := '$', commentChar := '#', importChar := '@', vitalChar := '*', literalChar := '~', q := "'"
 
   static preset := Map(
     'a_mydocuments', A_MyDocuments,
@@ -16,6 +16,9 @@ class CustomFS {
     'a_desktop', A_Desktop,
     'a_scriptdir', A_ScriptDir,
     'a_scriptfullpath', A_ScriptFullPath,
+    'a_ahkpath', A_AhkPath,
+    'a_tab', A_Tab,
+    'a_newline', '`n',
   )
 
   __New(_path, _warn) {
@@ -27,13 +30,13 @@ class CustomFS {
   static Of(_path, _warn := false) => CustomFS(_path, _warn)
 
   Init(_path) {
-    f := FileOpen(_path, 'r', 'utf-8'), r := 0, ec := this.escChar, rc := this.refChar, cc := this.commentChar
+    f := FileOpen(_path, 'r', 'utf-8'), r := 0, ec := this.escChar, rc := this.refChar, cc := this.commentChar, lc := this.literalChar
       , ic := this.importChar, vc := this.vitalChar, import := false, cp := _path, this.cfgs.Set(cp.toLowerCase(), this.cfgs.Count + 1)
     while !f.AtEOF {
       r++, l := f.ReadLine()
       if !import and l and l[1] = ic
         l := _processImport(l, _path)
-      if !l or l[1] = cc
+      if !l or l[1] = cc or l ~= '^---'
         continue
       if l[1] = A_Space {
         Warn('忽略了一行以空格开头的内容(' l ')', 0, l, cp)
@@ -65,11 +68,15 @@ class CustomFS {
     _processLine(_line) {
       if _line[1] = ic
         Warn('以导入符开头的键，考虑是否为导入语句', 1, _line, cp)
-      else if _line[1] = vc
+      else if _line[1] = lc {
+        _line := _line.subString(2), ori := true
+      } else if _line[1] = vc
         _line := _line.subString(2), impt := true
       i := 1, cs := _line.toCharArray(), _jumpToChar(cs, ':', &i, '无效的键，键须以:结尾'), k := _processValue(_line.substring(1, i++), 1, true)
       if k[1] = ':'
         Warn('以键值分隔符开头的键会造成混淆', 1, _line, cp)
+      if IsSet(ori) and ori
+        return _set(k, _line.substring(i), i, l, cp)
       if i <= cs.Length and cs[i] = A_Space
         _skipChar(cs, A_Space, &i)
       if i > cs.Length or cs[i] = cc {
@@ -86,7 +93,7 @@ class CustomFS {
             _l := LTrim(l.substring(2), A_Space), vs.Push(_processValue(_l, 1))
           else {
             cs := (_l := LTrim(l.substring(2), A_Space)).toCharArray(), _jumpToChar(cs, ':', &_i := 1, '无效的键')
-            _k := _l.substring(1, _i), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1)
+            _k := RTrim(_l.substring(1, _i)), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1)
           }
           l := f.ReadLine(), r++
         }
@@ -125,9 +132,16 @@ class CustomFS {
           else Warn('错误的读取到注释符，考虑是否正确闭合引号', _idx, _lt, cp), s .= cs[_idx]
         } else if !_raw and cs[_idx] = rc and !esc {
           _i := ++_idx, _jumpToChar(cs, rc, &_idx, '未找到成对的引用符'), _k := _lt.substring(_i, _idx)
-          try _v := _get(_k)
-          catch
-            ThrowErr('引用不存在的键或预设值:' _k, _idx, _lt, cp)
+          if !_has(_k) {
+            if RegExMatch(_k, '\[(.*?)\]$', &o) {
+              _k := _k.substring(1, o.Pos)
+              try _v := _get(_k)[o[1]]
+              catch
+                ThrowErr('无效的引用:' o[1], _idx, _lt, cp)
+              if !_v
+                ThrowErr('无效的引用:' o[1], _idx, _lt, cp)
+            } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _lt, cp)
+          } else _v := _get(_k)
           if !IsPrimitive(_v)
             ThrowErr('无法引用复杂类型', _idx, _lt, cp)
           s .= _v
@@ -146,7 +160,7 @@ class CustomFS {
         Warn('覆盖已有的键:' _k, _c, _l, _f)
       this.data.Set(_k, _v)
     }
-
+    _has(_k) => this.data.Has(_k) || CustomFS.preset.Has(_k)
     _get(_k) => this.data.Has(_k) ? this.data.Get(_k) : CustomFS.preset.Get(_k.toLowerCase())
 
     _jumpToChar(_chars, _char, &_idx, _msg) {
