@@ -2,9 +2,12 @@ CustomFs.ahk，由ahk编写的自定义配置文件解析工具。
 
 # 注释
 注释以`#`开头，支持尾随注释，不支持多行注释。
+注释也可以`---`开头，必须以`---`开头。
 ```text
 # comment
 key:val # comment
+
+---
 ```
 
 # 支持的数据类型
@@ -51,22 +54,40 @@ obj:
 foo: @./bar.txt  # 局部导入
 @./cfg1.txt      # 错误
 ```
-# 修饰符*
+
+# 修饰符
+## 重要符*
 可以在键前添加`*`符标记该数据为不可覆盖，可以避免被其他文件导入时被覆盖。
 ```text
 *foo : bar
+```
+## 原义符~
+可以在键前添加`~`符设置值为原义串，避免转义；此时`:`右边的空格会被当作值的一部分而不是忽略。
+```text
+# : $#
+~raw :: $#
 ```
 
 # 引用
 使用`$`包裹的内容会被当作引用字段，只能引用基本类型。
 可以在所有值中引用，而键不可以。
-脚本提供一组预设的引用值，可以在脚本中引用，可用预设值包括：
+脚本提供一组预设的引用值，可以在脚本中引用，可用预设值包括但不限于：
 ```A_MyDocuments, A_UserName,A_Startup, A_Now, A_Desktop, A_ScriptDir, A_ScriptFullPath```
 ```text
 foo : bar
 baz : $foo$-baz  # bar-baz
 arr :
 - arr-$baz$      # arr-bar-baz
+```
+## 复杂类型上的引用
+依旧无法引用数组或对象，但可以引用它们的子项。
+使用`[]`引用子项，如果错误引用会抛出错误。
+```text
+arr:
+-a
+obj:
++a : 1
+ref: $arr[1]$_$obj[a]$ # a_1
 ```
 
 # 转义
@@ -88,12 +109,12 @@ foo : 'bar baz'  # bar baz
 ```
 
 # 自定义
-可以修改转义符、引用符、注释符、导入符、不可覆盖符及引号符为任意字符，这些符号在脚本中设置为变量。
+可以修改转义符、引用符、注释符、导入符、不可覆盖符、原义符及引号符为任意字符，这些符号在脚本中设置为变量。
 
 # 示例
 ```text
 # save directory
-*base : $A_Desktop$/
+*base : $A_Desktop$\
 
 group:
 - $base$default
@@ -106,10 +127,11 @@ group:
 meow : $base$meow.txt
 
 hotkeys :
-+ cancel : !`
++ cancel : !``
 + submit : !s
 
 edit : 'notepad $meow$'
+~raw :use `$` to ref
 ```
 
 # QA
