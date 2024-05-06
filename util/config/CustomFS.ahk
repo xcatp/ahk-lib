@@ -62,7 +62,7 @@ class CustomFS {
           break
       }
       return _l
-      _getNextPath() => Path.Join(Path.Dir(_cp), _processValue(_l, 2))
+      _getNextPath() => Path.IsAbsolute(_cp) ? _cp : Path.Join(Path.Dir(_cp), _processValue(_l, 2))
     }
 
     _processLine(_line) {
