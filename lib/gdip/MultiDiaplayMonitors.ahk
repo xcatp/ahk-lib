@@ -1,5 +1,3 @@
-#Requires AutoHotkey v2.0
-
 #Include ../../Extend.ahk
 
 ; ======================================================================================================================
@@ -7,29 +5,19 @@
 ; by 'just me'
 ; https://autohotkey.com/boards/viewtopic.php?f=6&t=4606
 ; ======================================================================================================================
-GetMonitorCount() {
-	Monitors := MDMF_Enum()
-	cnt := 0
-	for k, v in Monitors.OwnProps() {
-		cnt++
-	}
-	return cnt
-}
+GetMonitorCount() => MDMF_Enum().Count
 
 GetMonitorInfo(MonitorNum) {
-	Monitors := MDMF_Enum()
-	for k, v in Monitors.OwnProps()
+	for k, v in MDMF_Enum().OwnProps()
 		if (v.Num = MonitorNum)
 			return v
 }
 
 GetPrimaryMonitor() {
-	Monitors := MDMF_Enum()
-	for k, v in Monitors.OwnProps()
-		If (v.Primary)
+	for k, v in MDMF_Enum().OwnProps()
+		if (v.Primary)
 			return v.Num
 }
-
 
 ; ----------------------------------------------------------------------------------------------------------------------
 ; Name ..........: MDMF - Multiple Display Monitor Functions
@@ -61,23 +49,21 @@ GetPrimaryMonitor() {
 ; ======================================================================================================================
 
 MDMF_Enum(HMON := '') {
-	static EnumProcAddr := CallbackCreate(MDMF_EnumProc)
-	static Monitors := {}
+	static EnumProcAddr := CallbackCreate(MDMF_EnumProc), Monitors := {}
 	Monitors.TotalCount := 0
-	if HMON = '' {
-		if !DllCall("User32.dll\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", EnumProcAddr, "Ptr", ObjPtr(Monitors)) {
+	if !HMON {
+		if !DllCall("User32.dll\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", EnumProcAddr, "Ptr", ObjPtr(Monitors))
 			return false
-		} else return Monitors
+		else return Monitors
 	} else return Monitors.HasProp('HMON') ? Monitors.HMON : false
 }
 
 MDMF_EnumProc(HMON, HDC, PRECT, ObjectAddr) {
-	Monitors := ObjFromPtrAddRef(ObjectAddr)
-	Monitors.HMON := MDMF_GetInfo(HMON)
+	Monitors := ObjFromPtrAddRef(ObjectAddr), Monitors.HMON := MDMF_GetInfo(HMON)
 	Monitors.TotalCount++
 	if Monitors.HMON.Primary
 		Monitors.Primary := HMON
-	Return True
+	Return true
 }
 
 ; ======================================================================================================================
@@ -100,14 +86,14 @@ MDMF_FromHWND(HWND, Flag := 0) => DllCall("User32.dll\MonitorFromWindow", "Ptr",
 ; ======================================================================================================================
 MDMF_FromPoint(X := "", Y := "") {
 	PT := Buffer(8, 0)
-	If (X = "") || (Y = "") {
+	if X = "" || Y = "" {
 		DllCall("User32.dll\GetCursorPos", "Ptr", PT)
-		If (X = "")
+		if X = ""
 			X := NumGet(PT, 0, "Int")
-		If (Y = "")
+		if Y = ""
 			Y := NumGet(PT, 4, "Int")
 	}
-	Return DllCall("User32.dll\MonitorFromPoint", "Int64", (X & 0xFFFFFFFF) | (Y << 32), "UInt", 0)
+	return DllCall("User32.dll\MonitorFromPoint", "Int64", (X & 0xFFFFFFFF) | (Y << 32), "UInt", 0)
 }
 ; ======================================================================================================================
 ; Retrieves the display monitor that has the largest area of intersection with a specified rectangle.
@@ -145,5 +131,5 @@ MDMF_GetInfo(HMON) {
 			, WARight: NumGet(MIEX, 28, "Int")   ; "
 			, WABottom: NumGet(MIEX, 32, "Int")   ; "
 			, Primary: NumGet(MIEX, 36, "UInt") } ; contains a non-zero value for the primary monitor.
-	Return False
+	Return false
 }

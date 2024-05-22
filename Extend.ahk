@@ -7,10 +7,6 @@
 #Include extend\_Map.ahk
 #Include extend\_UI.ahk
 #Include extend\_Hotkey.ahk
-#Include extend\_Deprecate.ahk
-
-; remove space and `n
-TrimAll(&str) => str := str.toCharArray().filter(v => v != ' ' && v != '`n').join('')
 
 ; Usage:
 ; ```
@@ -23,7 +19,7 @@ TrimAll(&str) => str := str.toCharArray().filter(v => v != ' ' && v != '`n').joi
 IfThen(condition, action, params*) {
   if condition {
     try execRes := action(params*)
-    catch 
+    catch
       MsgBox 'error occu when exec func:' action.Name
     return true & IsTrue(execRes)
   } else return false
@@ -100,6 +96,8 @@ Lambda(name, params*) => (*) => name(params*)
 SurroundWith(str, chars) => chars str chars
 IsSurroundWith(str, chars) => !chars || str.substring(1, chars.Length + 1) = chars && str.substring(str.Length - chars.Length + 1) = chars
 
+T_(s, e := [], c := '\') => e.concat(['`vv', '`ff', '`bb', '`nn', '`rr', '`tt']).reduce((r, v) => r.replace(v[1], c v[2]), s)
+
 ; ```
 ; Msgbox ToString({ foo: 'bar' })
 ; ```
@@ -146,16 +144,7 @@ ToString(o, q := false, esc := false, expandLevel := unset, space := '  ') {
           _s := Round(_s, Max(1, _d - InStr(_s, ".") - 1))
         return _s _v
       case IsInteger(_s): return _s
-      case IsString(_s):
-        _s := StrReplace(_s, "\", "\\")
-        _s := StrReplace(_s, "`t", "\t")
-        _s := StrReplace(_s, "`r", "\r")
-        _s := StrReplace(_s, "`n", "\n")
-        _s := StrReplace(_s, "`b", "\b")
-        _s := StrReplace(_s, "`f", "\f")
-        _s := StrReplace(_s, "`v", "\v")
-        _s := StrReplace(_s, '"', '\"')
-        return q ? '"' _s '"' : _s
+      case IsString(_s): return T_(q ? '"' _s '"' : _s, ['\\', '""'])
       default: return _s
     }
   }

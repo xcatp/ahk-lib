@@ -11,7 +11,7 @@ defProp({}.base, "Count", { get: ObjOwnPropCount })
 ; obj := { key: 'value'}
 ; MsgBox obj['key']
 ;```
-item_obj_get(this, key) => this.HasProp(key) ? this.%key% : Undefined
+item_obj_get(this, key) => this.HasProp(key) ? this.%key% : ''
 
 ; Usage:
 ; ```

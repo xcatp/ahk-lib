@@ -62,7 +62,7 @@ class CustomFS {
           break
       }
       return _l
-      _getNextPath() => Path.IsAbsolute(_cp) ? _cp : Path.Join(Path.Dir(_cp), _processValue(_l, 2))
+      _getNextPath() => Path.IsAbsolute(_l := _processValue(_l, 2)) ? _l : Path.Join(Path.Dir(_cp), _l)
     }
 
     _processLine(_line) {
@@ -133,13 +133,13 @@ class CustomFS {
         } else if !_raw and cs[_idx] = rc and !esc {
           _i := ++_idx, _jumpToChar(cs, rc, &_idx, '未找到成对的引用符'), _k := _lt.substring(_i, _idx)
           if !_has(_k) {
-            if RegExMatch(_k, '\[(.*?)\]$', &o) {
-              _k := _k.substring(1, o.Pos)
-              try _v := _get(_k)[o[1]]
+            if RegExMatch(_k, '\[(.*?)\]$', &re) {
+              _k := _k.substring(1, re.Pos)
+              try _v := (_o := _get(_k))[re[1]]
               catch
-                ThrowErr('无效的引用:' o[1], _idx, _lt, cp)
-              if !_v
-                ThrowErr('无效的引用:' o[1], _idx, _lt, cp)
+                ThrowErr('无效的引用:' re[1], _idx, _lt, cp)
+              if !_v and TypeIsObj(_o)
+                ThrowErr('无效的对象子项引用:' re[1], _idx, _lt, cp)
             } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _lt, cp)
           } else _v := _get(_k)
           if !IsPrimitive(_v)
@@ -160,7 +160,7 @@ class CustomFS {
         Warn('覆盖已有的键:' _k, _c, _l, _f)
       this.data.Set(_k, _v)
     }
-    _has(_k) => this.data.Has(_k) || CustomFS.preset.Has(_k)
+    _has(_k) => this.data.Has(_k) || CustomFS.preset.Has(_k.toLowerCase())
     _get(_k) => this.data.Has(_k) ? this.data.Get(_k) : CustomFS.preset.Get(_k.toLowerCase())
 
     _jumpToChar(_chars, _char, &_idx, _msg) {

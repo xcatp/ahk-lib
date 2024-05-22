@@ -24,7 +24,7 @@ class Cursor {
     return this
   }
 
-  static SetCursorIcon(type) {
+  static SetIcon(type) {
     static init := 0, table := Map(), ID := Map("NORMALL", 32512, 'IBEAM', 32513, 'WAIT', 32514
       , 'CROSS', 32515, "SIZENWSE", 32642, "SIZENESW", 32643
       , "SIZEWE", 32644, "SIZENS", 32645, "SIZEALL", 32646
@@ -32,7 +32,7 @@ class Cursor {
     )
     if !init {
       init := 1
-      OnExit((*) => Cursor.SetCursorIcon(A_Cursor))
+      OnExit((*) => Cursor.SetIcon(A_Cursor))
       For k, v in ID {
         table[k] := DllCall("CopyImage", "ptr", DllCall("LoadCursor", "ptr", 0, "ptr", v)
           , "int", 2, "int", 0, "int", 0, "int", 0)
@@ -44,18 +44,9 @@ class Cursor {
     else DllCall("SystemParametersInfo", "int", 0x57, "int", 0, "ptr", 0, "int", 0)
   }
 
-  class CursorType {
-    static no := 'NO'
-    static wait := 'WAIT'
-    static hand := 'HAND'
-    static ibeam := 'IBEAM'
-    static cross := 'CROSS'
-    static arrow := 'NORMALL'
-    static sizeWE := 'SIZEWE'
-    static sizeNS := 'SIZENS'
-    static sizeAll := 'SIZEALL'
-    static sizeNWSE := 'SIZENWSE'
-    static sizeNESW := 'SIZENESW'
+  class Icon {
+    static no := 'NO', wait := 'WAIT', hand := 'HAND', ibeam := 'IBEAM', cross := 'CROSS', arrow := 'NORMALL'
+      , sizeWE := 'SIZEWE', sizeNS := 'SIZENS', sizeAll := 'SIZEALL', sizeNWSE := 'SIZENWSE', sizeNESW := 'SIZENESW'
   }
 
   class _Methods {

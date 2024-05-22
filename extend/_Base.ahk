@@ -1,7 +1,6 @@
 #Requires AutoHotkey v2.0
 
-Undefined := '', Null := '', DefProp := {}.DefineProp
-
+DefProp := {}.DefineProp
 Noop(*) => {}
 
 IsMap(_obj) => _obj is Map

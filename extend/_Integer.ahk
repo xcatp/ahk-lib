@@ -1,5 +1,3 @@
-#Requires AutoHotkey v2.0
-
 #Include _Base.ahk
 
 DefProp(0.base, "BitCount", { call: _BitCount })
