@@ -5,20 +5,11 @@
 
 class CustomFS {
 
-  data := Map(), cfgs := Map(), vital := Map()
+  data := Map(), cfgs := Map(), vital := Map(), encoding := 'utf-8'
     , escChar := '``', refChar := '$', commentChar := '#', importChar := '@', vitalChar := '*', literalChar := '~', q := "'"
-
   static preset := Map(
-    'a_mydocuments', A_MyDocuments,
-    'a_username', A_UserName,
-    'a_startup', A_Startup,
-    'a_now', A_Now,
-    'a_desktop', A_Desktop,
-    'a_scriptdir', A_ScriptDir,
-    'a_scriptfullpath', A_ScriptFullPath,
-    'a_ahkpath', A_AhkPath,
-    'a_tab', A_Tab,
-    'a_newline', '`n',
+    'a_mydocuments', A_MyDocuments, 'a_username', A_UserName, 'a_startup', A_Startup, 'a_now', A_Now, 'a_desktop', A_Desktop,
+    'a_scriptdir', A_ScriptDir, 'a_scriptfullpath', A_ScriptFullPath, 'a_ahkpath', A_AhkPath, 'a_tab', A_Tab, 'a_newline', '`n',
   )
 
   __New(_path, _warn) {
@@ -30,10 +21,10 @@ class CustomFS {
   static Of(_path, _warn := false) => CustomFS(_path, _warn)
 
   Init(_path) {
-    f := FileOpen(_path, 'r', 'utf-8'), r := 0, ec := this.escChar, rc := this.refChar, cc := this.commentChar, lc := this.literalChar
-      , ic := this.importChar, vc := this.vitalChar, import := false, cp := _path, this.cfgs.Set(cp.toLowerCase(), this.cfgs.Count + 1)
-    while !f.AtEOF {
-      r++, l := f.ReadLine()
+    f := FileRead(_path, this.encoding).split('`r`n'), r := 1, ec := this.escChar, rc := this.refChar, cc := this.commentChar, lc := this.literalChar
+      , e := f.Length, ic := this.importChar, vc := this.vitalChar, import := false, cp := _path, this.cfgs.Set(cp.toLowerCase(), this.cfgs.Count + 1)
+    while r <= e {
+      l := f[r++]
       if !import and l and l[1] = ic
         l := _processImport(l, _path)
       if !l or l[1] = cc or l ~= '^---'
@@ -46,10 +37,8 @@ class CustomFS {
         ThrowErr('错误的语法: 以-开头而不在数组定义范围内', 0, l, cp)
       else if l[1] = '+'
         ThrowErr('错误的语法: 以+开头而不在对象定义范围内', 0, l, cp)
-
       import := true, _processLine(l)
     }
-    return f.Close()
 
     _processImport(_l, _cp) {
       while true {
@@ -57,97 +46,95 @@ class CustomFS {
           ThrowErr('导入重复文件:' _cp, 1, _l, cp)
         if !FileExist(_cp)
           ThrowErr('导入不存在的文件:' _cp, 1, _l, cp)
-        this.Init(_cp), _l := f.ReadLine(), r++
-        if !_l or _l[1] != ic or f.AtEOF
+        this.Init(_cp), _l := f[r++]
+        if !_l or _l[1] != ic or r > e
           break
       }
       return _l
       _getNextPath() => Path.IsAbsolute(_l := _processValue(_l, 2)) ? _l : Path.Join(Path.Dir(_cp), _l)
     }
 
-    _processLine(_line) {
-      if _line[1] = ic
-        Warn('以导入符开头的键，考虑是否为导入语句', 1, _line, cp)
-      else if _line[1] = lc {
-        _line := _line.subString(2), ori := true
-      } else if _line[1] = vc
-        _line := _line.subString(2), impt := true
-      i := 1, cs := _line.toCharArray(), _jumpToChar(cs, ':', &i, '无效的键，键须以:结尾'), k := _processValue(_line.substring(1, i++), 1, true)
+    _processLine(_l) {
+      if _l[1] = ic
+        Warn('以导入符开头的键，考虑是否为导入语句', 1, _l, cp)
+      else if _l[1] = lc {
+        _l := _l.subString(2), ori := true
+      } else if _l[1] = vc
+        _l := _l.subString(2), impt := true
+      i := 1, cs := _l.toCharArray(), _to(cs, ':', &i, '无效的键，键须以:结尾'), k := _processValue(_l.substring(1, i++), 1, true)
       if k[1] = ':'
-        Warn('以键值分隔符开头的键会造成混淆', 1, _line, cp)
+        Warn('以键值分隔符开头的键会造成混淆', 1, _l, cp)
       if IsSet(ori) and ori
-        return _set(k, _line.substring(i), i, l, cp)
+        return _set(k, _l.substring(i), i, l, cp)
       if i <= cs.Length and cs[i] = A_Space
-        _skipChar(cs, A_Space, &i)
+        _go(cs, A_Space, &i)
       if i > cs.Length or cs[i] = cc {
-        if f.AtEOF
-          ThrowErr('不允许空的复杂类型', i, _line, cp)
-        l := f.ReadLine(), r++, isArr := l[1] = '-'
+        if r > e
+          ThrowErr('不允许空的复杂类型', i, _l, cp)
+        l := f[r++], isArr := l[1] = '-'
         if l[1] != '-' and l[1] != '+'
           ThrowErr('第一个子项必须与键连续', i, l, cp)
         vs := isArr ? [] : {}, pc := isArr ? '-' : '+', _set(k, vs, 1, l, cp)
         while true {
           if !l or l[1] != pc
             break
-          if isArr
-            _l := LTrim(l.substring(2), A_Space), vs.Push(_processValue(_l, 1))
-          else {
-            cs := (_l := LTrim(l.substring(2), A_Space)).toCharArray(), _jumpToChar(cs, ':', &_i := 1, '无效的键')
-            _k := RTrim(_l.substring(1, _i)), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1)
-          }
-          l := f.ReadLine(), r++
+          isArr ? (_l := LTrim(l.substring(2), A_Space), vs.Push(_processValue(_l, 1)))
+            : (cs := (_l := LTrim(l.substring(2), A_Space)).toCharArray(), _to(cs, ':', &_i := 1, '无效的键')
+              , _k := RTrim(_l.substring(1, _i)), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1))
+          l := f[r++]
         }
-        if !f.AtEOF and l
+        if r <= e and l
           _processLine(l)
-      } else _set(k, _processValue(_line, i), 1, _line, cp)
+      } else _set(k, _processValue(_l, i), 1, _l, cp)
       IsSet(impt) && this.vital.Set(k, [cp, r])
     }
 
-    _processValue(_lt, _idx, _raw := false) {
-      s := '', cs := _lt.toCharArray(), inQ := false, q := this.q
+    _processValue(_l, _idx, _raw := false) {
+      s := '', cs := _l.toCharArray(), inQ := false, q := this.q
       if !_raw and cs[_idx] = ic {
-        _p := _processValue(_lt, _idx + 1, true)
+        _p := _processValue(_l, _idx + 1, true)
         if !FileExist(_p)
-          ThrowErr('文件不存在:' _p, _idx, _lt, cp)
+          ThrowErr('文件不存在:' _p, _idx, _l, cp)
         else return CustomFS(Path.IsAbsolute(_p) ? _p : Path.Join(Path.Dir(cp), _p), true).data
       }
       while _idx <= cs.Length {
         esc := false
         if cs[_idx] = A_Tab
-          ThrowErr('不允许使用Tab', _idx, _lt, cp)
+          ThrowErr('不允许使用Tab', _idx, _l, cp)
         else if cs[_idx] = ec
           esc := true, _idx++
         if _idx > cs.Length
-          ThrowErr('转义符后应接任意字符', _idx, _lt, cp)
+          ThrowErr('转义符后应接任意字符', _idx, _l, cp)
         if !inQ and cs[_idx] = A_Space {
-          _i := _idx, _skipChar(cs, A_Space, &_idx)
+          _i := _idx, _go(cs, A_Space, &_idx)
           if _idx <= cs.Length and cs[_idx] != cc
-            Warn(JoinStr('', '忽略了一条值的后续内容(', _lt.substring(_i), ')，因为没有在', q, '内使用空格'), _idx, _lt, cp)
+            Warn(JoinStr('', '忽略了一条值的后续内容(', _l.substring(_i), ')，因为没有在', q, '内使用空格'), _idx, _l, cp)
           break
         } else if !esc and cs[_idx] = q
           inQ := !inQ
         else if !esc and cs[_idx] = cc {
-          if inQ
-            Warn('错误的读取到注释符，考虑是否需要转义', _idx, _lt, cp), s .= cs[_idx]
-          else Warn('错误的读取到注释符，考虑是否正确闭合引号', _idx, _lt, cp), s .= cs[_idx]
+          inQ ? (Warn('错误的读取到注释符，考虑是否需要转义', _idx, _l, cp), s .= cs[_idx])
+            : (Warn('错误的读取到注释符，考虑是否正确闭合引号', _idx, _l, cp), s .= cs[_idx])
         } else if !_raw and cs[_idx] = rc and !esc {
-          _i := ++_idx, _jumpToChar(cs, rc, &_idx, '未找到成对的引用符'), _k := _lt.substring(_i, _idx)
+          _i := ++_idx, _to(cs, rc, &_idx, '未找到成对的引用符'), _k := _l.substring(_i, _idx)
           if !_has(_k) {
             if RegExMatch(_k, '\[(.*?)\]$', &re) {
               _k := _k.substring(1, re.Pos)
               try _v := (_o := _get(_k))[re[1]]
               catch
-                ThrowErr('无效的引用:' re[1], _idx, _lt, cp)
+                ThrowErr('无效的引用:' re[1], _idx, _l, cp)
               if !_v and TypeIsObj(_o)
-                ThrowErr('无效的对象子项引用:' re[1], _idx, _lt, cp)
-            } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _lt, cp)
+                ThrowErr('无效的对象子项引用:' re[1], _idx, _l, cp)
+            } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _l, cp)
           } else _v := _get(_k)
-          if !IsPrimitive(_v)
-            ThrowErr('无法引用复杂类型', _idx, _lt, cp)
+          if !IsPrimitive(_v) {
+            Warn('引用复杂类型', _idx, _l, cp)
+            return _v
+          }
           s .= _v
         } else s .= cs[_idx]
         if _idx = cs.Length and inQ
-          ThrowErr('未正确闭合引号', _idx, _lt, cp)
+          ThrowErr('未正确闭合引号', _idx, _l, cp)
         _idx++
       }
       return s
@@ -163,14 +150,14 @@ class CustomFS {
     _has(_k) => this.data.Has(_k) || CustomFS.preset.Has(_k.toLowerCase())
     _get(_k) => this.data.Has(_k) ? this.data.Get(_k) : CustomFS.preset.Get(_k.toLowerCase())
 
-    _jumpToChar(_chars, _char, &_idx, _msg) {
+    _to(_chars, _char, &_idx, _msg) {
       while _idx <= _chars.Length and _chars[_idx] != _char
         _idx++
       if _msg and _idx > _chars.Length
         ThrowErr(_msg, _idx - 1, _chars.Join(''), cp)
     }
 
-    _skipChar(_chars, _char, &_idx) {
+    _go(_chars, _char, &_idx) {
       while _idx <= _chars.Length and _chars[_idx] = _char
         _idx++
     }
