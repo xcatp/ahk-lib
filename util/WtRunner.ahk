@@ -2,6 +2,10 @@
 
 #Include ..\Extend.ahk
 
+/**
+ * 详细参数参阅：https://learn.microsoft.com/zh-cn/windows/terminal/command-line-arguments?tabs=windows
+ */
+
 /**@example
  * WtRunner.Builder()
  *   .Window(-1)
@@ -41,6 +45,7 @@ class WtRunner {
     globalParam := { window: '', size: '', pos: '', focus: false }, tabs := []
 
     Chain(exp) => this
+    ; -1 new | 0 last
     Window(idOrName) => this.Chain(this.globalParam.window := idOrName)
     Size(r, c) => this.Chain(this.globalParam.size := [r, c])
     Pos(x, y) => this.Chain(this.globalParam.pos := [x, y])
