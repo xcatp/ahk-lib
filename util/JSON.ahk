@@ -4,7 +4,7 @@
 
 class JSON {
 
-  static Stringify(o, l := unset, space := '  ') => ToString(o, true, true, l?, space)
+  static Stringify(object, expandLevel := unset, space := '  ') => ToString(object, true, true, expandLevel?, space)
 
   static Format(jsonData, indent := 4) {
     s := '', l := 0, inQ := false
