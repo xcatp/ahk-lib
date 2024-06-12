@@ -1,0 +1,1 @@
+extends for ahk2, make code easier.

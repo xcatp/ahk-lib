@@ -1,6 +1,7 @@
 #Include _Base.ahk
 
 DefProp(0.base, "BitCount", { call: _BitCount })
+DefProp(0.base, "ToBase", { call: _ToBase })
 DefProp(0.base, "Between", { call: _Between })
 
 _BitCount(this) {
@@ -13,4 +14,5 @@ _BitCount(this) {
   return n
 }
 
+_ToBase(this, b) => (this < b ? "" : _ToBase(this // b, b)) . ((d := Mod(this, b)) < 10 ? d : Chr(d + 55))
 _Between(this, l, r) => this >= l && this <= r

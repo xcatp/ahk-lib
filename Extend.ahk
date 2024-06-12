@@ -151,3 +151,5 @@ ToString(o, q := false, esc := false, expandLevel := unset, space := '  ') {
 
   _getIndent(_l) => space.repeat(_l - 1)
 }
+
+IsHan(char) => (_c := '0x' Ord(char).toBase(16)) >= 0x4e00 && _c <= 0x9fff
