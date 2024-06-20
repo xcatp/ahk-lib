@@ -1,5 +1,4 @@
 ﻿#Requires AutoHotkey v2.0
-#SingleInstance Force
 
 #Include g:\AHK\git-ahk-lib\Extend.ahk
 

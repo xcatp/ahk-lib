@@ -20,6 +20,8 @@ DefProp("".base, "ToTitleCase", { call: StrTitle })
 DefProp("".base, "Split", { call: StrSplit })
 DefProp("".base, "SubString", { call: _SubStr })
 DefProp("".base, "Length", { get: StrLen })
+DefProp("".base, "PadStart", { call: _padStart })
+DefProp("".base, "PadEnd", { call: _padEnd })
 DefProp("".base, "__item", { get: __item_String })
 DefProp("".base, "__Enum", { call: String_Enum })
 
@@ -89,4 +91,22 @@ _Repeat(this, count) {
     r .= this
   }
   return r
+}
+
+_padStart(this, len, str) {
+  if this.Length >= len
+    return this
+  len := len >> 0, l := len - this.length, str := str.Length ? str : '0'
+  if (l > str.length)
+    str .= str.repeat(l / str.length)
+  return (SubStr(str, 1, l) this)
+}
+
+_padEnd(this, len, str) {
+  if this.Length >= len
+    return this
+  len := len >> 0, l := len - this.length, str := str.Length ? str : '0'
+  if (l > str.length)
+    str .= str.repeat(l / str.length)
+  return (this SubStr(str, 1, l))
 }
