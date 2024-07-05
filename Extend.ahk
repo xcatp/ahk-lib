@@ -144,7 +144,7 @@ ToString(o, q := false, esc := false, expandLevel := unset, space := '  ') {
           _s := Round(_s, Max(1, _d - InStr(_s, ".") - 1))
         return _s _v
       case IsInteger(_s): return _s
-      case IsString(_s): return T_(q ? '"' _s '"' : _s, ['\\', '""'])
+      case IsString(_s): return q ? '"' T_(_s, ['\\', '""']) '"' : T_(_s, ['\\', '""'])
       default: return _s
     }
   }
@@ -153,3 +153,6 @@ ToString(o, q := false, esc := false, expandLevel := unset, space := '  ') {
 }
 
 IsHan(char) => (_c := '0x' Ord(char).toBase(16)) >= 0x4e00 && _c <= 0x9fff
+
+MToString(o) => MsgBox(ToString(o))
+MTToString(o) => MsgBox(T_(ToString(o)))
