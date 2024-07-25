@@ -8,8 +8,16 @@ class CustomFS {
   data := Map(), cfgs := Map(), vital := Map(), encoding := 'utf-8'
     , escChar := '``', refChar := '$', commentChar := '#', importChar := '@', vitalChar := '*', literalChar := '~', q := "'"
   static preset := Map(
-    'a_mydocuments', A_MyDocuments, 'a_username', A_UserName, 'a_startup', A_Startup, 'a_now', A_Now, 'a_desktop', A_Desktop,
-    'a_scriptdir', A_ScriptDir, 'a_scriptfullpath', A_ScriptFullPath, 'a_ahkpath', A_AhkPath, 'a_tab', A_Tab, 'a_newline', '`n',
+    'a_mydocuments', A_MyDocuments,
+    'a_username', A_UserName,
+    'a_startup', A_Startup,
+    'a_now', A_Now,
+    'a_desktop', A_Desktop,
+    'a_scriptdir', A_ScriptDir,
+    'a_scriptfullpath', A_ScriptFullPath,
+    'a_ahkpath', A_AhkPath,
+    'a_tab', A_Tab,
+    'a_newline', '`n',
   )
 
   __New(_path, _warn) {
@@ -81,6 +89,8 @@ class CustomFS {
           isArr ? (_l := LTrim(l.substring(2), A_Space), vs.Push(_processValue(_l, 1)))
             : (cs := (_l := LTrim(l.substring(2), A_Space)).toCharArray(), _to(cs, ':', &_i := 1, '无效的键')
               , _k := RTrim(_l.substring(1, _i)), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1))
+          if r > e
+            break
           l := f[r++]
         }
         if r <= e and l
@@ -175,4 +185,5 @@ class CustomFS {
   }
 
   Get(key, default := '') => this.data.Get(key, default)
+  Has(key) => this.data.Has(key)
 }
