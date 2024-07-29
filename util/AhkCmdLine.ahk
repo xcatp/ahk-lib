@@ -8,22 +8,32 @@
 ; and will be stored in A_Args.
 ; </p>
 ; Some correct command-line :
-; - "C:\Program\AutoHotkey64.exe" /restart /force "C:\scripts\foo.ahk" "foo=bar"
+; - C:\Program\AutoHotkey64.exe /restart /force "C:\scripts\foo .ahk" "foo=bar"
 ; - C:\Program\AutoHotkey64.exe   /restart         C:\scripts\foo.ahk   foo=bar
 ;
 ; InCorrect command-line:
-; - "C:\Program\AutoHotkey64.exe" C:\\.ahk s\foo.ahk "foo=bar"  # path with space should surround with quote
+; - C:\Program\AutoHotkey64.exe C:\\.ahk s\foo.ahk "foo=bar"  # path with space should surround with quote
 ParseCmdLine(cmdLine) {
-  parts := cmdLine.Split(A_Space).filter(v => v)        ; convert to array and skip blank values
-  ahkExePath := parts.Shift(), switchs := []
-  if !parts.Length
-    throw Error('invalid command-line')
-  while parts.Length and parts[1][1] = '/'
-    switchs.Push(parts.Shift())
-  if !parts.Length
-    throw Error('invalid command-line')
-  filespec := parts.Shift(), args := parts
-  return { ahkExePath: ahkExePath, switchs: switchs, filespec: filespec, params: args }
+  if !cmdLine
+    throw Error('invalid command line:blank input')
+  switchs := [], args := [], _s := '', _q := false
+  for i, v in cmdLine {
+    if (_c := cmdLine.charAt(i)) = '\' && i < cmdLine.length && cmdLine.charAt(i + 1) = '"' {
+      _s .= '"', i++
+    } else if _c = '"' {
+      if _q
+        args.push(_s), _s := ''
+      _q := !_q
+    } else if _c = ' ' && !_q {
+      if _s.length > 0
+        _s[1] = '/' ? switchs.push(_s) : args.push(_s), _s := ''
+    } else _s .= _c
+  }
+  if _s.length > 0
+    args.push(_s)
+  if args.Length < 2
+    throw Error('invalid command line:bad command line')
+  return { ahkExePath: args.shift(), switchs: switchs, filespec: args.shift(), params: args }
 }
 
 GetCommandLine() => commandLine := StrGet(DllCall('GetCommandLineW'))
