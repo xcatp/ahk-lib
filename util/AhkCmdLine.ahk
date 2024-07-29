@@ -16,8 +16,8 @@
 ParseCmdLine(cmdLine) {
   if !cmdLine
     throw Error('invalid command line:blank input')
-  switchs := [], args := [], _s := '', _q := false
-  for i, v in cmdLine {
+  switchs := [], args := [], _s := '', _q := false, i := 1
+  while i <= cmdLine.length {
     if (_c := cmdLine.charAt(i)) = '\' && i < cmdLine.length && cmdLine.charAt(i + 1) = '"' {
       _s .= '"', i++
     } else if _c = '"' {
@@ -28,6 +28,7 @@ ParseCmdLine(cmdLine) {
       if _s.length > 0
         _s[1] = '/' ? switchs.push(_s) : args.push(_s), _s := ''
     } else _s .= _c
+    i++
   }
   if _s.length > 0
     args.push(_s)
