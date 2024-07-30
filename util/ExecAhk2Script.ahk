@@ -2,12 +2,12 @@
 
 #Include ..\Extend.ahk
 
-ExecScript(scriptFullPath, switchs := [], args := '', exePath := A_AhkPath) {
+ExecScript(scriptFullPath, switchs := [], args := [], exePath := A_AhkPath) {
   if not FileExist(Trim(scriptFullPath, '"'))
     throw Error('script not exist: ' scriptFullPath)
   cmd := exePath A_Space
     . switchs.join(A_Space) A_Space
     . SurroundWith(scriptFullPath, '"') A_Space
-    . (args ? SurroundWith(args, '"') : '')
+    . args.Join(A_Space)
   Run(A_ComSpec ' /c' cmd, , 'hide')
 }
