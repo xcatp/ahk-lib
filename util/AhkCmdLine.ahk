@@ -22,7 +22,7 @@ ParseCmdLine(cmdLine) {
       _s .= '"', i++
     } else if _c = '"' {
       if _q
-        args.push(_s), _s := ''
+        _s[1] = '/' ? switchs.push(_s) : args.push(_s), _s := ''
       _q := !_q
     } else if _c = ' ' && !_q {
       if _s.length > 0
