@@ -1,4 +1,17 @@
-﻿#Requires AutoHotkey v2.0
+﻿/* 
+  ; 使用静态方法（常用）
+  Tip.ShowTip('hello')  ; 默认4s后隐藏
+  ; 使用静态方法返回值
+  clear := Tip.ShowTip('hello') ; clear方法仅在reuse为ture时返回
+  Sleep(1000), clear()  ; 1s后手动销毁
+ 
+  ; 使用构造方法
+  _t := Tip('hello')
+  _t.Display() ; 显示
+  Sleep 1000
+  _t.Recycle() ; 销毁
+*/
+#Requires AutoHotkey v2.0
 
 #Include extend\Set.ahk
 

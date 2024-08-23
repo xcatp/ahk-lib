@@ -96,6 +96,7 @@ Lambda(name, params*) => (*) => name(params*)
 SurroundWith(str, chars) => chars str chars
 IsSurroundWith(str, chars) => !chars || str.substring(1, chars.Length + 1) = chars && str.substring(str.Length - chars.Length + 1) = chars
 
+; 将不可见字符转为转义字符
 T_(s, e := [], c := '\') => e.concat(['`vv', '`ff', '`bb', '`nn', '`rr', '`tt']).reduce((r, v) => r.replace(v[1], c v[2]), s)
 
 ; ```
@@ -152,6 +153,7 @@ ToString(o, q := false, esc := false, expandLevel := unset, space := '  ') {
   _getIndent(_l) => space.repeat(_l - 1)
 }
 
+; 是否为汉字
 IsHan(char) => (_c := '0x' Ord(char).toBase(16)) >= 0x4e00 && _c <= 0x9fff
 
 MToString(o) => MsgBox(ToString(o))

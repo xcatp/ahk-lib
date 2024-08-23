@@ -1,6 +1,6 @@
 ﻿#Requires AutoHotkey v2.0
 
-#Include g:\AHK\git-ahk-lib\Extend.ahk
+#Include ../Extend.ahk
 
 class JSON {
 
