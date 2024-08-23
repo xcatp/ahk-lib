@@ -2,6 +2,8 @@
 
 #Include ..\Extend.ahk
 
+CoordMode 'Mouse'
+
 ; g := Gui('+AlwaysOnTop +ToolWindow -Caption')
 ; g.AddEdit('w600 h500')
 
@@ -12,8 +14,6 @@
 ; Animation.RollDown(g)
 ; Sleep 1000
 ; Animation.RollUp(g)
-
-CoordMode 'Mouse'
 
 class Animation {
 
@@ -29,7 +29,7 @@ class Animation {
       doAdapter(), target.getPos(&x, &y, &w, &h)
     else target.getPos(&x, &y, &w, &h), _setPos(&x, &y)
     target.Show('x' x ' y' y ' NA'), doAfterShow()
-    loop 25 
+    loop 25
       Sleep(wait), WinSetTransparent(A_Index * 10, target)
     WinSetTransparent(255, target)
 

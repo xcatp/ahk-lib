@@ -34,10 +34,8 @@ _At_String(this, index) => this.ToCharArray()[index]
 
 ; 返回指定位置的字符，不接受负数。
 _CharAt(this, index) {
-  if index <= 0 || index > this.Length
-    throw Error('Index ' index ' out of range')
   charArr := StrSplit(this)
-  return charArr[index]
+  return index > 0 ? charArr[index] : charArr[charArr.Length + index + 1]
 }
 ; 返回指定位置的字符码元
 _CharCodeAt(this, index) {
@@ -73,6 +71,7 @@ _EndWith(this, searchString, endPostion?) {
   }
 }
 
+; 与 api[SubStr] 不同，此方法与java一致，裁剪下标[a, b)
 _SubStr(this, startPos, length?) {
   if IsSet(length) && length > startPos
     length := length - startPos

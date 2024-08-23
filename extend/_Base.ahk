@@ -18,6 +18,7 @@ TypeIsObj(_obj) => Type(_obj) = 'object'
 IsTrue(var) => var != '' && var != 0
 IsFalse(var) => !IsTrue(var)
 
+; true if var equals false, [], Map(), {}
 IsEmpty(var) => IsFalse(var)
   || IsArray(var) and var.Length = 0
   || IsMap(var) and var.Count = 0

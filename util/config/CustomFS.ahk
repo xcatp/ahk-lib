@@ -1,12 +1,14 @@
 ﻿#Requires AutoHotkey v2.0
 
-#Include ..\..\Extend.ahk
-#Include ..\..\Path.ahk
+#Include G:\AHK\git-ahk-lib\Extend.ahk
+#Include G:\AHK\git-ahk-lib\Path.ahk
 
 class CustomFS {
 
   data := Map(), cfgs := Map(), vital := Map(), encoding := 'utf-8'
     , escChar := '``', refChar := '$', commentChar := '#', importChar := '@', vitalChar := '*', literalChar := '~', q := "'"
+    , fnChar := '&', fn_l := '{', fn_r := '}', za_l := '[', za_r := ']'
+
   static preset := Map(
     'a_mydocuments', A_MyDocuments,
     'a_username', A_UserName,
@@ -20,6 +22,12 @@ class CustomFS {
     'a_newline', '`n',
   )
 
+  static buildinFunc := Map(  ; $1 presents params count
+    'tc$1', StrTitle,
+    'uc$1', StrUpper,
+    'lc$1', StrLower,
+  )
+
   __New(_path, _warn) {
     if !FileExist(_path)
       throw Error('读取的文件不存在:' _path)
@@ -31,6 +39,7 @@ class CustomFS {
   Init(_path) {
     f := FileRead(_path, this.encoding).split('`r`n'), r := 1, ec := this.escChar, rc := this.refChar, cc := this.commentChar, lc := this.literalChar
       , e := f.Length, ic := this.importChar, vc := this.vitalChar, import := false, cp := _path, this.cfgs.Set(cp.toLowerCase(), this.cfgs.Count + 1)
+      , fnc := this.fnChar, fnl := this.fn_l, fnr := this.fn_r, zal := this.za_l, zar := this.za_r
     while r <= e {
       l := f[r++]
       if !import and l and l[1] = ic
@@ -67,15 +76,90 @@ class CustomFS {
         Warn('以导入符开头的键，考虑是否为导入语句', 1, _l, cp)
       else if _l[1] = lc {
         _l := _l.subString(2), ori := true
-      } else if _l[1] = vc
+      } else if _l[1] = vc {
         _l := _l.subString(2), impt := true
-      i := 1, cs := _l.toCharArray(), _to(cs, ':', &i, '无效的键，键须以:结尾'), k := _processValue(_l.substring(1, i++), 1, true)
+      } else if _l[1] = fnc {
+        _l := _l.subString(2), fnDef := true
+      }
+      i := 1, cs := _l.toCharArray(), _to(cs, ':', &i, '无效的键，键须以:结尾')
+      if IsSet(fnDef) and fnDef {  ; process func define
+        k := Trim(_l.substring(1, i++)), _go(cs, A_Space, &i)
+        v := _processValue(_l, i)
+        DCon(_parseFuncDef(k), &name := 'fName', &params := 'params')
+        postStr := _parseBody(v, params, &mapping := {})
+        __f__ := (_p*) => __f.Bind(postStr, mapping, _p*)
+        _set(name, __f__, i, _l, cp)
+
+        __f(str, mapping, p*) {
+          i := 1, _chs := str.toChararray(), _r := '', _c := 1
+          while i + 1 <= _chs.Length {
+            if _chs[i] = fnl and _chs[i + 1] = fnr
+              _r .= p[mapping[_c]], _c++, i++
+            else _r .= _chs[i]
+            i++
+          }
+          return _r
+        }
+
+        _parseBody(_s, _p, &_m) {
+          _pos := 1, idx := {}, _r := ''
+          for i, v in _s {
+            if v = fnl {
+              _pos := i
+            } else if v = fnr {
+              idx[idx.Length + 1] := _s.substring(_pos + 1, i)
+              _r := SubStr(_r, 1, _r.Length - i + _pos + 1)
+            }
+            _r .= v
+          }
+          for k, v in idx.OwnProps()
+            _m[k] := _p[v]
+          return _r
+        }
+
+        return
+      }
+      k := _processValue(_l.substring(1, i++), 1, true)
       if k[1] = ':'
         Warn('以键值分隔符开头的键会造成混淆', 1, _l, cp)
       if IsSet(ori) and ori
         return _set(k, _l.substring(i), i, l, cp)
       if i <= cs.Length and cs[i] = A_Space
         _go(cs, A_Space, &i)
+      if i < l.Length and cs[i] = zal { ; process zip array
+        def := l.substring(i), inQ := false, _i := 1, i := 0
+        while ++i <= def.length { ; find the position of ']'
+          v := def[i]
+          if i + 1 <= def.length and v = ec and def[i + 1] = this.q {
+            i++
+            continue
+          }
+          if !inQ and v = zar {
+            _i := i
+            break
+          } else if v = this.q
+            inQ := !inQ
+        }
+        def := def.substring(2, _i).trim()
+        inQ := false, data := [], _i := 1, i := 0
+        while ++i <= def.length {
+          v := def[i]
+          if i + 1 <= def.length and v = ec and def[i + 1] = this.q {
+            i++
+            continue
+          }
+          if !inQ and v = ',' {
+            if _i != i and s := def.substring(_i, i).trim()
+              data.push(_processValue(s, 1))
+            _i := i + 1
+          } else if v = this.q
+            inQ := !inQ
+        }
+        if _i <= def.length
+          data.Push(_processValue(def.substring(_i).trim(), 1))
+        _set(k, data, _i, l, cp)
+        return
+      }
       if i > cs.Length or cs[i] = cc {
         if r > e
           ThrowErr('不允许空的复杂类型', i, _l, cp)
@@ -89,14 +173,32 @@ class CustomFS {
           isArr ? (_l := LTrim(l.substring(2), A_Space), vs.Push(_processValue(_l, 1)))
             : (cs := (_l := LTrim(l.substring(2), A_Space)).toCharArray(), _to(cs, ':', &_i := 1, '无效的键')
               , _k := RTrim(_l.substring(1, _i)), vs.%_k% := _processValue(LTrim(_l.substring(_i + 1)), 1))
+          l := ''
           if r > e
             break
           l := f[r++]
         }
-        if r <= e and l
+        if l
           _processLine(l)
       } else _set(k, _processValue(_l, i), 1, _l, cp)
       IsSet(impt) && this.vital.Set(k, [cp, r])
+    }
+
+    _parseFuncDef(k) {
+      _i := 1, _chs := k.toCharArray(), _to(_chs, '(', &_i, '无效的函数定义')
+      params := _parse(k.substring(_i))
+      fName .= k.substring(1, _i) '$' params.Length
+      return { fName: fName, params: params }
+
+      _parse(_s) {
+        _s := StrReplace(_s, A_Space)
+        if _s[1] != '(' or _s[-1] != ')'
+          ThrowErr('无效的函数定义', _i, k, cp)
+        _s := _s.substring(2, _s.Length)
+        _r := {}
+        StrSplit(_s, ',').filter(v => v).foreach((v, i) => _r[v] := i)
+        return _r
+      }
     }
 
     _processValue(_l, _idx, _raw := false) {
@@ -127,16 +229,20 @@ class CustomFS {
             : (Warn('错误的读取到注释符，考虑是否正确闭合引号', _idx, _l, cp), s .= cs[_idx])
         } else if !_raw and cs[_idx] = rc and !esc {
           _i := ++_idx, _to(cs, rc, &_idx, '未找到成对的引用符'), _k := _l.substring(_i, _idx)
-          if !_has(_k) {
-            if RegExMatch(_k, '\[(.*?)\]$', &re) {
-              _k := _k.substring(1, re.Pos)
-              try _v := (_o := _get(_k))[re[1]]
-              catch
-                ThrowErr('无效的引用:' re[1], _idx, _l, cp)
-              if !_v and TypeIsObj(_o)
-                ThrowErr('无效的对象子项引用:' re[1], _idx, _l, cp)
-            } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _l, cp)
-          } else _v := _get(_k)
+          ; if is func
+          if _k ~= '^\w+\(.*?\)$' {
+            DCon(_parseFuncDef(_k), &name := 'fName', &params := 'params')
+            ; 未做类型检查
+            vals := params.keys.map(v => (v[1] = fnc) ? _doRef(v.substring(2)) : v)
+            if CustomFS.buildinFunc.Has(name) {
+              s .= CustomFS.buildinFunc.Get(name)(vals*), _idx++
+              continue
+            } else if _has(name) {
+              s .= _get(name)(vals*)(), _idx++
+              continue
+            } else ThrowErr('未定义的函数', _idx, _l, cp)
+          }
+          _v := _doRef(_k)
           if !IsPrimitive(_v) {
             Warn('引用复杂类型', _idx, _l, cp)
             return _v
@@ -148,6 +254,20 @@ class CustomFS {
         _idx++
       }
       return s
+
+      _doRef(_k) {
+        if _has(_k)
+          return _get(_k)
+        if RegExMatch(_k, '\[(.*?)\]$', &re) {
+          _k := _k.substring(1, re.Pos)
+          try _v := (_o := _get(_k))[re[1]]
+          catch
+            ThrowErr('无效的引用:' re[1], _idx, _l, cp)
+          if !_v and TypeIsObj(_o)
+            ThrowErr('无效的对象子项引用:' re[1], _idx, _l, cp)
+        } else ThrowErr('引用不存在的键或预设值:' _k, _idx, _l, cp)
+        return _v
+      }
     }
 
     _set(_k, _v, _c, _l, _f) {

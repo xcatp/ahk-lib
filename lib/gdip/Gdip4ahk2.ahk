@@ -31,7 +31,6 @@
 ;-------------------
 
 
-
 ; Function:					UpdateLayeredWindow
 ; Description:				Updates a layered window with the handle to the DC of a gdi bitmap
 ;
@@ -1240,17 +1239,19 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality := 75) {
   if !pCodec
     return -3
   if (Quality != 75) {
-    Quality := (Quality < 0) ? 0 : (Quality > 100) ? 100 : Quality
+    Quality := (Quality < 0) ? 0 : (Quality >= 100) ? 100 : Quality
     if RegExMatch(Extension, "^\.(?i:JPG|JPEG|JPE|JFIF)$") {
-      DllCall("gdiplus\GdipGetEncoderParameterListSize", 'uptr', pBitmap, 'uptr', pCodec, "uint*", &nSize)
+      DllCall("gdiplus\GdipGetEncoderParameterListSize", 'uptr', pCodec, "uint*", &nSize)
       EncoderParameters := Buffer(nSize, 0)
-      DllCall("gdiplus\GdipGetEncoderParameterList", 'uptr', pBitmap, 'uptr', pCodec, "uint", nSize, 'uptr', EncoderParameters.Ptr)
+      DllCall("gdiplus\GdipGetEncoderParameterList", 'uptr', pCodec, "uint", nSize, 'uptr', EncoderParameters.Ptr)
       nCount := NumGet(EncoderParameters, "UInt")
       Loop nCount {
         elem := (24 + (A_PtrSize ? A_PtrSize : 4)) * (A_Index - 1) + 4 + (pad := A_PtrSize = 8 ? 4 : 0)
         if (NumGet(EncoderParameters, elem + 16, "UInt") = 1) && (NumGet(EncoderParameters, elem + 20, "UInt") = 6) {
           _p := elem + EncoderParameters.Ptr - pad - 4
-          NumPut('uint', Quality, NumGet(NumPut('uint', 4, NumPut('uint', 1, _p, 0), 20), 'uint'))
+          NumPut('uint', 1, EncoderParameters, 40)
+          NumPut('uint', 4, EncoderParameters, 60)
+          NumPut('uint', Quality, EncoderParameters, 64)
           break
         }
       }

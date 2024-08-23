@@ -1,0 +1,12 @@
+﻿zipArr : [ 1, 4, 5 ]  # zip array
+
+arr : # cc
+- a
+- B # B
+- D # D
+
+obj : # obj
++ a : A # AA
++ C : C # C
+
+str : world # ccc

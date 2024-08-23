@@ -1,0 +1,71 @@
+# 此文件展示 CustomFs.ahk 支持的所有语法
+
+@./1.txt  # 全局导入
+
+--- 1 局部导入
+extend : @./2.txt
+
+
+--- 2 修饰符
+*license  : MIT
+~describe :Hello AutoHotKey
+
+
+--- 3 字符串
+remote : g:\AHK\  # string
+
+
+--- 4 数组
+arr :  # array
+- xcatp
+- ciok  # 
+
+
+--- 5 对象
+obj :  # object
++ a : 1
++ b : 2
+
+
+--- 6 压缩数组
+# 特殊字符 ,[] 需要使用引号包围，而引号需要转义
+zipArr : [ abc, ',[]', `' ]  # zip array
+
+
+--- 7 引用
+this : $remote$MeowTool  # 引用字符串
+
+# 使用 [] 引用复杂类型的子项
+ref1 : 'hello $arr[1]$'  # 引用数组子项
+ref2 : $obj[a]$  # 引用对象子项
+
+# 直接引用复杂类型
+refO : e$obj$  # 引用对象，e被忽略
+refA : $arr$e  # 引用数组，e被忽略（停止解析）
+
+
+--- 8 函数
+vm-centos : 192.168.6.100  # 虚拟机ip
+vm-ubuntu : 192.168.6.101
+*A_URL    : $vm-centos$  # 选择
+
+&url(_) : http://$A_URL$:{_}  # 引用
+
+vm       : $url(80)$
+rabbitmq : $url(15672)$
+minio    : $url(9090)$
+
+# 使用内置函数
+uc : $uc(string)$
+# 函数参数使用引用
+s1 : $uc(&arr[1])$
+
+--- 其他
+# 处理空格，以下两种方式等价
+space-1 : hello' 'world
+space-2 : 'hello world'
+
+
+# 处理转义
+esc-1 : `'`$``  # '$`，确实需要转义的字符
+esc-2 : `a`b`c  # abc，即使这些字符不需要转义
