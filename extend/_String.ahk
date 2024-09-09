@@ -5,6 +5,7 @@
 DefProp("".base, "At", { call: _At_String })
 DefProp("".base, "CharAt", { call: _CharAt })
 DefProp("".base, "CharCodeAt", { call: _CharCodeAt })
+DefProp("".base, "ToChs", { call: StrSplit })
 DefProp("".base, "ToCharArray", { call: StrSplit })
 DefProp("".base, "Concat", { call: _Concat_String })
 DefProp("".base, "BeginWith", { call: _BeginWith })
