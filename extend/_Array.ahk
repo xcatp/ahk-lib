@@ -133,13 +133,11 @@ _Find(this, cb) {
 }
 
 ; 返回数组中满足提供的测试函数的第一个元素的索引。
-; 若没有找到对应元素则返回 -1。
 _FindIndex(this, cb) {
   for v in this {
     if cb(v)
       return A_Index
   }
-  return -1
 }
 
 ; 反向迭代数组，并返回满足提供的测试函数的第一个元素的值。
@@ -156,7 +154,6 @@ _FindLastIndex(this, cb) {
     if cb(this[l - A_Index + 1])
       return l - A_Index + 1
   }
-  return -1
 }
 
 ; 对数组的每个元素执行一次给定的函数。

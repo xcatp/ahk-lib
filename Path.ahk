@@ -61,7 +61,7 @@ class Path {
   static IsAbsolute(_path) {
     if !_path or !IsString(_path)
       return false
-    return _path ~= '^(?:\w:)?[\\/]'
+    return _path ~= '^(?:\w:)?[\\/]' || _path ~= '^\w:'
   }
 
   ; 将所有给定的 path 片段连接在一起，然后规范化生成的路径。
@@ -109,15 +109,15 @@ class Path {
   }
 
   ; 返回从 from 到 to 的相对路径。
-  ; 如果 to 是绝对路径，返回 to
+  ; 如果 to 是绝对路径，而 from 不是，返回 to
   static Relative(from, to) {
     if !IsString(from) or !IsString(to)
       throw TypeError('Path must be a string.')
     from := from || A_ScriptFullPath, to := to || A_ScriptFullPath
-    from := Path.Resolve(from), to := Path.Resolve(to)
+    from := Path.Normalize(from), to := Path.Normalize(to)
     if from = to
       return ''
-    if Path.IsAbsolute(to)
+    if Path.IsAbsolute(to) and !Path.IsAbsolute(from)
       return to
     res := [], froms := from.Split(Path.delimiter), tos := to.Split(Path.delimiter)
     i := j := 1
@@ -134,6 +134,7 @@ class Path {
   }
 
   ; 将路径或路径片段的序列解析为绝对路径。
+  ; 如果最后还没有得到绝对路径，则与脚本目录连接
   static Resolve(params*) {
     for param in params {
       if !param or !IsString(param)
@@ -142,6 +143,6 @@ class Path {
         _ := ''
       _ .= param Path.delimiter
     }
-    return Path.IsAbsolute(_ := Path.Normalize(_)) ? _ : A_ScriptFullPath
+    return Path.IsAbsolute(_ := Path.Normalize(_)) ? _ : Path.Join(A_ScriptDir, _)
   }
 }
